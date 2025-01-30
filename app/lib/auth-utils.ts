@@ -10,7 +10,7 @@ export async function createUserInFirestore(firebaseUser: any, role: 'student' |
     name: firebaseUser.displayName || undefined,
     role,
     enrolledClasses: [],
-    ...(role === 'teacher' && { teachingClasses: [] })
+    teachingClasses: []  // Add this field for all users
   }
   await setDoc(doc(db, 'users', firebaseUser.uid), userData)
   return userData
@@ -22,7 +22,6 @@ export async function getUserFromFirestore(uid: string) {
   return docSnap.exists() ? docSnap.data() as User : null
 }
 
-// app/lib/protected-routes.ts
 export function isProtectedRoute(pathname: string): boolean {
   return pathname.startsWith('/dashboard') || 
          pathname.startsWith('/teacher') || 

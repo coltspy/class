@@ -1,4 +1,3 @@
-// app/c/[classId]/page.tsx
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -57,9 +56,9 @@ export default function ClassPage() {
     <div className="max-w-5xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-8">
-        <div className="px-6 py-12 bg-gradient-to-r from-blue-600 to-blue-700 relative">
+        <div className="px-6 py-12 bg-gradient-to-r from-teal-600 to-teal-700 relative">
           <h1 className="text-3xl font-bold text-white mb-2">{classData.name}</h1>
-          <div className="flex items-center gap-4 text-blue-100">
+          <div className="flex items-center gap-4 text-teal-100">
             <span className="flex items-center gap-1">
               <Users className="h-5 w-5" />
               {classData.studentIds?.length || 0} students
@@ -73,7 +72,7 @@ export default function ClassPage() {
           </div>
           {isTeacher && (
             <button
-              className="absolute top-4 right-4 bg-white text-blue-600 px-4 py-2 rounded-full text-sm font-medium hover:bg-blue-50 transition-colors duration-200 ease-in-out flex items-center gap-2"
+              className="absolute top-4 right-4 bg-white text-teal-600 px-4 py-2 rounded-full text-sm font-medium hover:bg-teal-50 transition-colors duration-200 ease-in-out flex items-center gap-2"
               onClick={() => setShowCreateModal(true)}
             >
               <Plus className="h-4 w-4" />
@@ -102,7 +101,7 @@ export default function ClassPage() {
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-3 mb-2">
-                      <Code className="h-6 w-6 text-blue-600" />
+                      <Code className="h-6 w-6 text-teal-600" />
                       <h3 className="text-lg font-semibold text-gray-900">
                         {assignment.title}
                       </h3>
@@ -137,7 +136,7 @@ export default function ClassPage() {
                     {isTeacher ? (
                       <Link
                         href={`/teacher/submissions/${assignment.id}`}
-                        className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
+                        className="inline-flex items-center gap-1 text-sm font-medium text-teal-600 hover:text-teal-700"
                       >
                         View All Submissions
                         <ExternalLink className="h-4 w-4" />
@@ -145,7 +144,7 @@ export default function ClassPage() {
                     ) : (
                       <Link
                         href={`/c/${classId}/a/${assignment.id}`}
-                        className="text-sm font-medium text-blue-600 hover:text-blue-700"
+                        className="text-sm font-medium text-teal-600 hover:text-teal-700"
                       >
                         View Assignment
                       </Link>
@@ -163,7 +162,7 @@ export default function ClassPage() {
                   ) : (
                     <div className="bg-white rounded-lg p-4 border border-gray-200">
                       {assignment.submissions && assignment.submissions[user.uid] ? (
-                        <div className="flex items-center gap-2 text-green-600">
+                        <div className="flex items-center gap-2 text-emerald-600">
                           <CheckCircle className="h-5 w-5" />
                           <span className="text-sm font-medium">Submitted</span>
                         </div>

@@ -1,10 +1,12 @@
-// app/lib/types.ts
+//app//lib/types.ts
+
 export interface User {
   uid: string;
   email: string;
   name?: string;
   role: 'student' | 'teacher';
   enrolledClasses: string[];
+  teachingClasses: string[];  // Add this field
 }
 
 export interface TestCase {
@@ -45,6 +47,6 @@ export interface ClassData {
   id: string;
   name: string;
   code: string;
-  teacherId: string;
+  teacherIds: string[];  
   studentIds: string[];
 }

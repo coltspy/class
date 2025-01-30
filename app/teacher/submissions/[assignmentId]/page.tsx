@@ -1,4 +1,3 @@
-// app/teacher/submissions/[assignmentId]/page.tsx
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -34,19 +33,16 @@ export default function AssignmentSubmissionsPage() {
     const fetchData = async () => {
       if (!params.assignmentId) return
 
-      // Fetch assignment data
       const assignmentDoc = await getDoc(doc(db, 'assignments', params.assignmentId as string))
       if (assignmentDoc.exists()) {
         const assignmentData = { id: assignmentDoc.id, ...assignmentDoc.data() } as Assignment
         setAssignment(assignmentData)
 
-        // Fetch class data
         const classDoc = await getDoc(doc(db, 'classes', assignmentData.classId))
         if (classDoc.exists()) {
           setClassData({ id: classDoc.id, ...classDoc.data() } as ClassData)
         }
 
-        // Fetch user data for each submission
         const submissionsData: SubmissionWithUser[] = []
         for (const [studentId, submission] of Object.entries(assignmentData.submissions || {})) {
           const userDoc = await getDoc(doc(db, 'users', studentId))
@@ -124,7 +120,7 @@ export default function AssignmentSubmissionsPage() {
                   key={submission.studentId}
                   onClick={() => setSelectedSubmission(submission.studentId)}
                   className={`w-full text-left p-4 hover:bg-gray-50 ${
-                    selectedSubmission === submission.studentId ? 'bg-blue-50' : ''
+                    selectedSubmission === submission.studentId ? 'bg-teal-50 border-l-4 border-l-teal-600' : ''
                   }`}
                 >
                   <div className="flex items-center justify-between">

@@ -12,8 +12,6 @@ import {
   ArrowRight,
   Parentheses,
   Binary,
-  BookOpen,
-  Sigma,
   ChevronRight
 } from 'lucide-react'
 
@@ -86,12 +84,6 @@ const lessons: Lesson[] = [
   }
 ]
 
-const difficultyColors: Record<Difficulty, string> = {
-  'Beginner': 'text-emerald-600 bg-emerald-50',
-  'Intermediate': 'text-blue-600 bg-blue-50',
-  'Advanced': 'text-purple-600 bg-purple-50'
-}
-
 export default function LearnPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('All')
   const categories = ['All', ...new Set(lessons.map(lesson => lesson.category))]
@@ -101,31 +93,27 @@ export default function LearnPage() {
     : lessons.filter(lesson => lesson.category === selectedCategory)
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-12">
-      <div className="bg-gradient-to-b from-teal-600 to-teal-700 pb-32 pt-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl">
-            <h1 className="text-4xl font-bold text-white mb-4">
-              Interactive Coding Lessons
-            </h1>
-            <p className="text-teal-100 text-lg">
-              Master programming fundamentals with hands-on practice and instant feedback.
-            </p>
-          </div>
+    <div className="min-h-screen bg-gradient-to-b from-teal-600 to-teal-700">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="max-w-4xl mb-8">
+          <h1 className="text-4xl font-bold text-white mb-4">
+            Interactive Coding Lessons
+          </h1>
+          <p className="text-teal-100 text-lg">
+            Master programming fundamentals with hands-on practice and instant feedback.
+          </p>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-32">
-        {/* Category Tabs */}
-        <div className="bg-white rounded-t-xl shadow-sm p-4 mb-8 flex gap-2 overflow-x-auto">
+        {/* Category Pills */}
+        <div className="bg-white/10 backdrop-blur-sm rounded-full p-1.5 inline-flex gap-2 mb-8">
           {categories.map((category) => (
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all
                 ${selectedCategory === category 
-                  ? 'bg-teal-50 text-teal-700 ring-1 ring-teal-600/20' 
-                  : 'text-gray-600 hover:bg-gray-50'
+                  ? 'bg-white text-teal-700' 
+                  : 'text-white hover:bg-white/10'
                 }`}
             >
               {category}
@@ -155,17 +143,7 @@ export default function LearnPage() {
                   {lesson.description}
                 </p>
 
-                <div className="flex items-center justify-between mt-auto">
-                  <div className="flex items-center gap-3">
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium
-                      ${difficultyColors[lesson.difficulty]}`}>
-                      {lesson.difficulty}
-                    </span>
-                    <span className="text-sm text-gray-500">
-                      {lesson.estimatedTime}
-                    </span>
-                  </div>
-
+                <div className="flex justify-end mt-4">
                   <Link
                     href={`/learn/${lesson.id}`}
                     className="inline-flex items-center text-sm text-teal-600 font-medium 

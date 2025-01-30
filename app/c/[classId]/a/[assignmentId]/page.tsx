@@ -1,4 +1,3 @@
-// app/c/[classId]/a/[assignmentId]/page.tsx
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -99,7 +98,7 @@ export default function AssignmentPage() {
       {submissionState.status === 'success' && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white rounded-lg p-6 flex items-center gap-3 shadow-lg ml-32">
-            <CheckCircle className="text-green-600" size={24} />
+            <CheckCircle className="text-emerald-600" size={24} />
             <p className="text-lg font-medium">{submissionState.message}</p>
           </div>
         </div>
@@ -146,11 +145,11 @@ export default function AssignmentPage() {
 
             {/* Status Banners */}
             {isSubmitted && (
-              <div className="mb-6 bg-green-50 border border-green-100 rounded-lg p-4 flex items-center gap-2 text-green-700">
+              <div className="mb-6 bg-emerald-50 border border-emerald-100 rounded-lg p-4 flex items-center gap-2 text-emerald-700">
                 <CheckCircle size={20} />
                 <div>
                   <p className="font-medium">Submitted</p>
-                  <p className="text-sm text-green-600">
+                  <p className="text-sm text-emerald-600">
                     on {new Date(assignment.submissions[user.uid].submittedAt).toLocaleString()}
                   </p>
                 </div>
@@ -169,7 +168,7 @@ export default function AssignmentPage() {
               </div>
             )}
 
-            <div className="prose max-w-none">
+            <div className="prose max-w-none text-gray-600">
               {assignment.description}
             </div>
           </div>

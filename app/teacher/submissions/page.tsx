@@ -1,4 +1,3 @@
-// app/teacher/submissions/page.tsx
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -66,7 +65,7 @@ export default function TeacherSubmissionsPage() {
             onClick={() => setSelectedClass('all')}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
               selectedClass === 'all'
-                ? 'border-blue-500 text-blue-600'
+                ? 'border-teal-600 text-teal-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             }`}
           >
@@ -78,7 +77,7 @@ export default function TeacherSubmissionsPage() {
               onClick={() => setSelectedClass(cls.id)}
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
                 selectedClass === cls.id
-                  ? 'border-blue-500 text-blue-600'
+                  ? 'border-teal-600 text-teal-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
@@ -173,7 +172,7 @@ function AssignmentCard({
               </span>
             </div>
           </div>
-          <ChevronRight className="h-5 w-5 text-gray-400" />
+          <ChevronRight className="h-5 w-5 text-teal-600" />
         </div>
       </div>
     </Link>
