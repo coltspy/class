@@ -3,6 +3,7 @@
 
 import { useState, useCallback } from 'react'
 import Editor from '@monaco-editor/react'
+import { CheckCircle, XCircle } from 'lucide-react'
 
 interface TestCase {
   input: string;
@@ -15,6 +16,7 @@ interface SplitCodeEditorProps {
   language?: string;
   readOnly?: boolean;
   testCases?: TestCase[];
+  onSubmit?: () => void;
 }
 
 export default function SplitCodeEditor({
@@ -22,61 +24,55 @@ export default function SplitCodeEditor({
   onChange,
   language = 'javascript',
   readOnly = false,
-  testCases = []
+  testCases = [],
+  onSubmit
 }: SplitCodeEditorProps) {
-  const [output, setOutput] = useState<string>('')
   const [consoleOutput, setConsoleOutput] = useState<string[]>([])
-  const [activeTest, setActiveTest] = useState<number | null>(null)
+  const [testResults, setTestResults] = useState<{ passed: boolean; output: string }[]>([])
+  const [allTestsPassed, setAllTestsPassed] = useState(false)
 
-  const customConsole = {
-    log: (...args: any[]) => {
-      setConsoleOutput(prev => [...prev, args.map(arg => String(arg)).join(' ')])
-    },
-    error: (...args: any[]) => {
-      setConsoleOutput(prev => [...prev, `Error: ${args.map(arg => String(arg)).join(' ')}`])
-    }
-  }
-
-  const executeCode = useCallback((codeToRun: string) => {
+  const executeTest = useCallback((testCase: TestCase, code: string): { passed: boolean; output: string } => {
     try {
-      // Create a safe function execution environment
-      const executeFunction = new Function('console', codeToRun)
-      executeFunction(customConsole)
+      const executableCode = `
+        ${code}
+        const result = solution(${testCase.input});
+        return result;
+      `
+      const testFunction = new Function(executableCode)
+      const result = testFunction()
+      const passed = String(result) === testCase.expectedOutput
+      
+      return {
+        passed,
+        output: `Result: ${result}\nExpected: ${testCase.expectedOutput}\nTest ${passed ? 'PASSED ✓' : 'FAILED ✗'}`
+      }
     } catch (error) {
-      customConsole.error(error)
+      return {
+        passed: false,
+        output: `Error: ${error}`
+      }
     }
   }, [])
 
-  const runCode = useCallback(() => {
+  const runAllTests = useCallback(() => {
     setConsoleOutput([])
-    executeCode(code)
-  }, [code, executeCode])
-
-  const runTestCase = useCallback((testCase: TestCase, index: number) => {
-    setActiveTest(index)
-    setConsoleOutput([])
-    
-    const testCode = `
-      ${code}
-      const result = solution(${testCase.input});
-      console.log('Result:', result);
-      console.log('Expected:', ${testCase.expectedOutput});
-      console.log('Test ' + (result === ${testCase.expectedOutput} ? 'PASSED ✓' : 'FAILED ✗'));
-    `
-    
-    executeCode(testCode)
-  }, [code, executeCode])
+    const results = testCases.map(testCase => executeTest(testCase, code))
+    setTestResults(results)
+    setAllTestsPassed(results.every(result => result.passed))
+    setConsoleOutput(results.map(r => r.output))
+  }, [code, testCases, executeTest])
 
   return (
-    <div className="grid grid-cols-2 gap-4 h-[600px]">
-      <div className="flex flex-col border rounded-lg overflow-hidden">
-        <div className="bg-gray-800 text-white px-4 py-2 text-sm flex justify-between items-center">
-          <span>Code Editor</span>
+    <div className="grid grid-cols-2 gap-6 min-h-[600px]">
+      {/* Code Editor */}
+      <div className="flex flex-col rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm">
+        <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex justify-between items-center">
+          <span className="font-medium text-gray-700">Solution</span>
           <button
-            onClick={runCode}
-            className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
+            onClick={runAllTests}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors"
           >
-            Run Code
+            Run Tests
           </button>
         </div>
         <Editor
@@ -96,38 +92,54 @@ export default function SplitCodeEditor({
         />
       </div>
 
-      <div className="flex flex-col border rounded-lg overflow-hidden">
-        <div className="bg-gray-800 text-white px-4 py-2 text-sm">
-          Output
-        </div>
-        <div className="flex-1 bg-gray-900 text-white p-4 font-mono text-sm overflow-auto">
-          {testCases.length > 0 && (
-            <div className="mb-4">
-              <h3 className="text-gray-400 mb-2">Test Cases:</h3>
-              <div className="space-y-2">
-                {testCases.map((test, index) => (
-                  <button
-                    key={index}
-                    onClick={() => runTestCase(test, index)}
-                    className={`w-full text-left p-2 rounded ${
-                      activeTest === index ? 'bg-gray-700' : 'bg-gray-800'
-                    } hover:bg-gray-700`}
-                  >
-                    <div>Input: {test.input}</div>
-                    <div>Expected: {test.expectedOutput}</div>
-                  </button>
-                ))}
-              </div>
-              <hr className="my-4 border-gray-700" />
-            </div>
+      {/* Output Panel */}
+      <div className="flex flex-col rounded-xl overflow-hidden border border-gray-200 bg-white shadow-sm">
+        <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex justify-between items-center">
+          <span className="font-medium text-gray-700">Test Results</span>
+          {onSubmit && (
+            <button
+              onClick={onSubmit}
+              disabled={!allTestsPassed}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                allTestsPassed 
+                  ? 'bg-green-600 hover:bg-green-700 text-white' 
+                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              }`}
+            >
+              Submit Solution
+            </button>
           )}
-
-          <div className="space-y-1">
-            {consoleOutput.map((line, index) => (
-              <div key={index} className="text-gray-300">
-                {line}
+        </div>
+        <div className="flex-1 bg-gray-50 p-6 overflow-auto">
+          <div className="space-y-4">
+            {testResults.length > 0 ? (
+              testResults.map((result, index) => (
+                <div
+                  key={index}
+                  className={`p-4 rounded-lg ${
+                    result.passed 
+                      ? 'bg-green-50 border border-green-100' 
+                      : 'bg-red-50 border border-red-100'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="font-medium text-gray-900">Test Case {index + 1}</span>
+                    {result.passed ? (
+                      <CheckCircle className="text-green-600" size={18} />
+                    ) : (
+                      <XCircle className="text-red-600" size={18} />
+                    )}
+                  </div>
+                  <pre className="whitespace-pre-wrap text-sm font-mono text-gray-600">
+                    {result.output}
+                  </pre>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                Click "Run Tests" to check your solution
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>

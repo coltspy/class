@@ -12,6 +12,20 @@ export interface TestCase {
   expectedOutput: string;
 }
 
+export interface TestResult {
+  passed: boolean;
+  output: string;
+}
+
+export interface Submission {
+  code: string;
+  submittedAt: string;
+  status: 'submitted' | 'graded';
+  grade?: number;
+  feedback?: string;
+  testResults?: TestResult[];
+}
+
 export interface Assignment {
   id: string;
   title: string;
@@ -23,19 +37,14 @@ export interface Assignment {
   classId: string;
   testCases: TestCase[];
   submissions: {
-    [key: string]: {
-      code: string;
-      submittedAt: string;
-      status: 'submitted' | 'graded';
-      grade?: number;
-    };
+    [userId: string]: Submission;
   };
 }
 
 export interface ClassData {
   id: string;
   name: string;
+  code: string;
   teacherId: string;
   studentIds: string[];
-  code: string;
 }

@@ -5,19 +5,11 @@ import { useEffect, useState } from 'react'
 import { db } from '@/app/lib/firebase'
 import { doc, getDoc, collection, query, where, onSnapshot } from 'firebase/firestore'
 import { useAuth } from '@/app/lib/auth'
-import { Calendar, Users, MoreVertical, Plus, FileText, ChevronDown, Code, CheckCircle } from 'lucide-react'
+import { Calendar, Users, Plus, FileText, ChevronDown, Code, CheckCircle, ExternalLink } from 'lucide-react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import CreateAssignmentModal from '@/app/components/CreateAssignmentModal'
-import { User, Assignment } from '@/app/lib/types'
-
-interface ClassData {
-  id: string;
-  name: string;
-  code: string;
-  teacherId: string;
-  studentIds: string[];
-}
+import { Assignment, ClassData } from '@/app/lib/types'
 
 export default function ClassPage() {
   const params = useParams()
@@ -40,10 +32,7 @@ export default function ClassPage() {
     }
     fetchClass()
 
-    const assignmentsQuery = query(
-      collection(db, 'assignments'), 
-      where('classId', '==', classId)
-    )
+    const assignmentsQuery = query(collection(db, 'assignments'), where('classId', '==', classId))
 
     return onSnapshot(assignmentsQuery, (snapshot) => {
       setAssignments(snapshot.docs.map(doc => ({
@@ -65,100 +54,109 @@ export default function ClassPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="max-w-5xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
       {/* Header */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8">
-        <div className="h-32 bg-gradient-to-r from-blue-500 to-blue-600 relative">
+      <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-8">
+        <div className="px-6 py-12 bg-gradient-to-r from-blue-600 to-blue-700 relative">
+          <h1 className="text-3xl font-bold text-white mb-2">{classData.name}</h1>
+          <div className="flex items-center gap-4 text-blue-100">
+            <span className="flex items-center gap-1">
+              <Users className="h-5 w-5" />
+              {classData.studentIds?.length || 0} students
+            </span>
+            {isTeacher && (
+              <span className="flex items-center gap-1">
+                <Code className="h-5 w-5" />
+                Class Code: {classData.code}
+              </span>
+            )}
+          </div>
           {isTeacher && (
-            <button 
-              className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg backdrop-blur-sm flex items-center gap-2"
+            <button
+              className="absolute top-4 right-4 bg-white text-blue-600 px-4 py-2 rounded-full text-sm font-medium hover:bg-blue-50 transition-colors duration-200 ease-in-out flex items-center gap-2"
               onClick={() => setShowCreateModal(true)}
             >
-              <Plus size={18} />
+              <Plus className="h-4 w-4" />
               Create Assignment
             </button>
           )}
         </div>
-        <div className="p-6">
-          <div className="flex justify-between items-start">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">{classData.name}</h1>
-              <div className="mt-2 flex items-center gap-4">
-                <span className="text-sm text-gray-500 flex items-center gap-1">
-                  <Users size={16} />
-                  {classData.studentIds?.length || 0} students
-                </span>
-                {isTeacher && (
-                  <span className="text-sm text-gray-500">
-                    Class Code: {classData.code}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Assignments List */}
-      <div className="space-y-4">
-        {assignments.map((assignment) => (
-          <div 
-            key={assignment.id}
-            className="bg-white rounded-xl shadow-sm border border-gray-200"
-          >
-            <div 
-              className="p-6 cursor-pointer"
-              onClick={() => setExpandedAssignment(
-                expandedAssignment === assignment.id ? null : assignment.id
-              )}
+      <div className="space-y-6">
+        {assignments.map((assignment) => {
+          const submissionStatus = getSubmissionStatus(assignment)
+          
+          return (
+            <div
+              key={assignment.id}
+              className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden transition-all duration-200 ease-in-out hover:shadow-md"
             >
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <Code size={20} className="text-blue-600" />
-                    <h3 className="text-lg font-medium text-gray-900">
-                      {assignment.title}
-                    </h3>
+              <div
+                className="p-6 cursor-pointer"
+                onClick={() => setExpandedAssignment(
+                  expandedAssignment === assignment.id ? null : assignment.id
+                )}
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="flex items-center gap-3 mb-2">
+                      <Code className="h-6 w-6 text-blue-600" />
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {assignment.title}
+                      </h3>
+                    </div>
+                    <p className="text-sm text-gray-600">{assignment.description}</p>
+                    <div className="mt-4 flex items-center gap-4 text-sm text-gray-500">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="h-4 w-4" />
+                        Due {new Date(assignment.dueDate).toLocaleDateString()}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <FileText className="h-4 w-4" />
+                        {assignment.points} points
+                      </span>
+                    </div>
                   </div>
-                  <p className="mt-1 text-sm text-gray-500">{assignment.description}</p>
-                  <div className="mt-3 flex items-center gap-4 text-sm text-gray-500">
-                    <span className="flex items-center gap-1">
-                      <Calendar size={16} />
-                      Due {new Date(assignment.dueDate).toLocaleDateString()}
-                    </span>
-                    <span>{assignment.points} points</span>
-                  </div>
+                  <ChevronDown
+                    className={`h-5 w-5 text-gray-400 transform transition-transform ${
+                      expandedAssignment === assignment.id ? "rotate-180" : ""
+                    }`}
+                  />
                 </div>
-                <ChevronDown 
-                  size={20} 
-                  className={`transform transition-transform ${
-                    expandedAssignment === assignment.id ? 'rotate-180' : ''
-                  }`}
-                />
               </div>
-            </div>
 
-            {/* Expanded View */}
-            {expandedAssignment === assignment.id && (
-              <div className="border-t border-gray-200 p-6 bg-gray-50">
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
+              {/* Expanded View */}
+              {expandedAssignment === assignment.id && (
+                <div className="border-t border-gray-200 p-6 bg-gray-50">
+                  <div className="flex justify-between items-center mb-4">
                     <h4 className="text-sm font-medium text-gray-700">
-                      {isTeacher ? 'Student Submissions' : 'Your Submission'}
+                      {isTeacher ? 'Submission Overview' : 'Your Submission'}
                     </h4>
-                    <Link
-                      href={`/c/${classId}/a/${assignment.id}`}
-                      className="text-sm text-blue-600 hover:underline"
-                    >
-                      {isTeacher ? 'View All' : 'View Assignment'}
-                    </Link>
+                    {isTeacher ? (
+                      <Link
+                        href={`/teacher/submissions/${assignment.id}`}
+                        className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
+                      >
+                        View All Submissions
+                        <ExternalLink className="h-4 w-4" />
+                      </Link>
+                    ) : (
+                      <Link
+                        href={`/c/${classId}/a/${assignment.id}`}
+                        className="text-sm font-medium text-blue-600 hover:text-blue-700"
+                      >
+                        View Assignment
+                      </Link>
+                    )}
                   </div>
 
                   {isTeacher ? (
                     <div className="bg-white rounded-lg p-4 border border-gray-200">
-                      <div className="flex items-center justify-between">
-                        <div className="text-sm text-gray-500">
-                          Submitted: {getSubmissionStatus(assignment).completed} / {getSubmissionStatus(assignment).total}
+                      <div className="flex items-center gap-4">
+                        <div className="text-sm text-gray-600">
+                          Submitted: {submissionStatus.completed} / {submissionStatus.total}
                         </div>
                       </div>
                     </div>
@@ -166,35 +164,31 @@ export default function ClassPage() {
                     <div className="bg-white rounded-lg p-4 border border-gray-200">
                       {assignment.submissions && assignment.submissions[user.uid] ? (
                         <div className="flex items-center gap-2 text-green-600">
-                          <CheckCircle size={16} />
-                          <span className="text-sm">Submitted</span>
+                          <CheckCircle className="h-5 w-5" />
+                          <span className="text-sm font-medium">Submitted</span>
                         </div>
                       ) : (
-                        <div className="text-sm text-gray-500">
-                          Not submitted yet
-                        </div>
+                        <div className="text-sm text-gray-600">Not submitted yet</div>
                       )}
                     </div>
                   )}
                 </div>
-              </div>
-            )}
-          </div>
-        ))}
+              )}
+            </div>
+          )
+        })}
 
         {assignments.length === 0 && (
           <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-200">
             <FileText className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-2 text-sm font-medium text-gray-900">No assignments yet</h3>
+            <p className="mt-1 text-sm text-gray-500">Get started by creating a new assignment.</p>
           </div>
         )}
       </div>
 
       {showCreateModal && (
-        <CreateAssignmentModal
-          classId={classId}
-          onClose={() => setShowCreateModal(false)}
-        />
+        <CreateAssignmentModal classId={classId} onClose={() => setShowCreateModal(false)} />
       )}
     </div>
   )

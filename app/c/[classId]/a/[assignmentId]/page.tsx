@@ -6,24 +6,31 @@ import { useParams, useRouter } from 'next/navigation'
 import { db } from '@/app/lib/firebase'
 import { doc, getDoc, updateDoc } from 'firebase/firestore'
 import { useAuth } from '@/app/lib/auth'
-import { ArrowLeft, Save, CheckCircle } from 'lucide-react'
+import { ArrowLeft, Clock, FileText, CheckCircle, XCircle } from 'lucide-react'
 import Link from 'next/link'
 import SplitCodeEditor from '@/app/components/SplitCodeEditor'
 import { Assignment, ClassData } from '@/app/lib/types'
+
+interface SubmissionState {
+  status: 'idle' | 'submitting' | 'success' | 'error';
+  message?: string;
+}
 
 export default function AssignmentPage() {
   const params = useParams()
   const router = useRouter()
   const { user } = useAuth()
+  
   const [assignment, setAssignment] = useState<Assignment | null>(null)
   const [classData, setClassData] = useState<ClassData | null>(null)
   const [code, setCode] = useState('')
-  const [submitting, setSubmitting] = useState(false)
+  const [submissionState, setSubmissionState] = useState<SubmissionState>({ status: 'idle' })
 
   useEffect(() => {
     const fetchData = async () => {
       if (!params.assignmentId || !params.classId) return
 
+      // Fetch assignment data
       const assignmentDoc = await getDoc(doc(db, 'assignments', params.assignmentId as string))
       if (assignmentDoc.exists()) {
         const assignmentData = {
@@ -32,6 +39,7 @@ export default function AssignmentPage() {
         } as Assignment
         setAssignment(assignmentData)
         
+        // Set initial code from submission or starter code
         if (user?.uid && assignmentData.submissions?.[user.uid]?.code) {
           setCode(assignmentData.submissions[user.uid].code)
         } else {
@@ -39,6 +47,7 @@ export default function AssignmentPage() {
         }
       }
 
+      // Fetch class data
       const classDoc = await getDoc(doc(db, 'classes', params.classId as string))
       if (classDoc.exists()) {
         setClassData({ id: classDoc.id, ...classDoc.data() } as ClassData)
@@ -56,7 +65,7 @@ export default function AssignmentPage() {
 
   const handleSubmit = async () => {
     if (!user || !assignment) return
-    setSubmitting(true)
+    setSubmissionState({ status: 'submitting' })
 
     try {
       await updateDoc(doc(db, 'assignments', assignment.id), {
@@ -66,108 +75,115 @@ export default function AssignmentPage() {
           status: 'submitted'
         }
       })
+      
+      setSubmissionState({ 
+        status: 'success', 
+        message: 'Assignment submitted successfully!' 
+      })
+      
+      // Redirect after 2 seconds
+      setTimeout(() => {
+        router.push(`/c/${params.classId}`)
+      }, 2000)
     } catch (error) {
-      console.error('Error submitting:', error)
+      setSubmissionState({ 
+        status: 'error', 
+        message: 'Error submitting assignment. Please try again.' 
+      })
     }
-
-    setSubmitting(false)
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      {/* Navigation */}
-      <Link 
-        href={`/c/${params.classId}`}
-        className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 mb-6"
-      >
-        <ArrowLeft size={16} className="mr-1" />
-        Back to {classData.name}
-      </Link>
-
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        {/* Main Content */}
-        <div className="lg:col-span-3 space-y-6">
-          {/* Assignment Details */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-            <div className="p-6">
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">{assignment.title}</h1>
-              <div className="prose max-w-none">
-                {assignment.description}
-              </div>
-            </div>
-          </div>
-
-          {/* Code Editor */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="border-b border-gray-200 p-4 flex justify-between items-center bg-gray-50">
-              <div className="flex items-center gap-4">
-                <span className="text-sm font-medium text-gray-700">JavaScript Playground</span>
-                {!isTeacher && !isSubmitted && !isPastDue && (
-                  <button
-                    onClick={handleSubmit}
-                    disabled={submitting}
-                    className="flex items-center gap-1 px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    <Save size={14} />
-                    Submit
-                  </button>
-                )}
-              </div>
-            </div>
-            <div className="p-4">
-            <SplitCodeEditor
-              code={code}
-              onChange={setCode}
-              language={assignment.language}
-              readOnly={Boolean(isSubmitted || isPastDue)} // Convert to boolean explicitly
-              testCases={assignment.testCases}
-            />
-            </div>
+    <div className="min-h-screen bg-gray-50 pb-12 ml-64">
+      {/* Success/Error Notifications */}
+      {submissionState.status === 'success' && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white rounded-lg p-6 flex items-center gap-3 shadow-lg ml-32">
+            <CheckCircle className="text-green-600" size={24} />
+            <p className="text-lg font-medium">{submissionState.message}</p>
           </div>
         </div>
+      )}
 
-        {/* Sidebar */}
-        <div className="space-y-6">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold mb-4">
-              {isTeacher ? 'Submissions' : 'Your Status'}
-            </h2>
+      {submissionState.status === 'error' && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white rounded-lg p-6 flex items-center gap-3 shadow-lg ml-32">
+            <XCircle className="text-red-600" size={24} />
+            <p className="text-lg font-medium">{submissionState.message}</p>
+          </div>
+        </div>
+      )}
+
+      <div className="max-w-[1600px] mx-auto px-6">
+        {/* Navigation */}
+        <div className="py-6">
+          <Link 
+            href={`/c/${params.classId}`}
+            className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900"
+          >
+            <ArrowLeft size={16} className="mr-1" />
+            Back to {classData.name}
+          </Link>
+        </div>
+
+        {/* Assignment Header */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+          <div className="max-w-3xl">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              {assignment.title}
+            </h1>
             
-            {isTeacher ? (
-              <div className="space-y-4">
-                {Object.entries(assignment.submissions || {}).map(([studentId, submission]) => (
-                  <div key={studentId} className="border-b pb-4 last:border-0">
-                    <div>
-                      <p className="font-medium">Student ID: {studentId}</p>
-                      <p className="text-sm text-gray-500">
-                        {new Date(submission.submittedAt).toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-                {Object.keys(assignment.submissions || {}).length === 0 && (
-                  <p className="text-sm text-gray-500">No submissions yet</p>
-                )}
-              </div>
-            ) : (
-              <div>
-                {isSubmitted ? (
-                  <div className="flex items-center gap-2 text-green-600">
-                    <CheckCircle size={16} />
-                    <span>Submitted</span>
-                  </div>
-                ) : isPastDue ? (
-                  <div className="text-red-600">Past due</div>
-                ) : (
-                  <div className="text-yellow-600">Not submitted yet</div>
-                )}
-                <div className="mt-4 text-sm text-gray-500">
-                  Due: {new Date(assignment.dueDate).toLocaleString()}
+            <div className="flex items-center gap-4 text-sm text-gray-500 mb-6">
+              <span className="flex items-center gap-1">
+                <Clock size={16} />
+                Due {new Date(assignment.dueDate).toLocaleDateString()}
+              </span>
+              <span className="flex items-center gap-1">
+                <FileText size={16} />
+                {assignment.points} points
+              </span>
+            </div>
+
+            {/* Status Banners */}
+            {isSubmitted && (
+              <div className="mb-6 bg-green-50 border border-green-100 rounded-lg p-4 flex items-center gap-2 text-green-700">
+                <CheckCircle size={20} />
+                <div>
+                  <p className="font-medium">Submitted</p>
+                  <p className="text-sm text-green-600">
+                    on {new Date(assignment.submissions[user.uid].submittedAt).toLocaleString()}
+                  </p>
                 </div>
               </div>
             )}
+
+            {isPastDue && !isSubmitted && (
+              <div className="mb-6 bg-red-50 border border-red-100 rounded-lg p-4 flex items-center gap-2 text-red-700">
+                <XCircle size={20} />
+                <div>
+                  <p className="font-medium">Past Due</p>
+                  <p className="text-sm text-red-600">
+                    This assignment cannot be submitted
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div className="prose max-w-none">
+              {assignment.description}
+            </div>
           </div>
         </div>
+
+        {/* Code Editor */}
+        <SplitCodeEditor
+          code={code}
+          onChange={setCode}
+          language={assignment.language}
+          readOnly={Boolean(isSubmitted || isPastDue)}
+          testCases={assignment.testCases}
+          onSubmit={!isSubmitted && !isPastDue ? handleSubmit : undefined}
+        />
       </div>
     </div>
   )

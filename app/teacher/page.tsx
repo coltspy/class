@@ -1,155 +1,145 @@
 // app/teacher/page.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useAuth } from '../lib/auth'
-import { db } from '../lib/firebase'
-import { addDoc, collection, query, where, onSnapshot } from 'firebase/firestore'
-import { Users, Pencil, Plus, Clock } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { collection, query, where, onSnapshot } from 'firebase/firestore'
+import { db } from '@/app/lib/firebase'
+import { useAuth } from '@/app/lib/auth'
+import { Assignment, ClassData } from '@/app/lib/types'
 import Link from 'next/link'
-import CreateAssignmentModal from '../components/CreateAssignmentModal'
-
-interface Class {
-  id: string;
-  name: string;
-  code: string;
-  studentIds: string[];
-}
+import { FileText, ChevronRight, Users, Clock, CheckCircle } from 'lucide-react'
 
 export default function TeacherDashboard() {
-  const [className, setClassName] = useState('')
-  const [classes, setClasses] = useState<Class[]>([])
-  const [selectedClass, setSelectedClass] = useState<string | null>(null)
-  const [showCreateModal, setShowCreateModal] = useState(false)
   const { user } = useAuth()
+  const [assignments, setAssignments] = useState<Assignment[]>([])
+  const [classes, setClasses] = useState<ClassData[]>([])
 
   useEffect(() => {
     if (!user?.uid) return
-    
+
     const classesQuery = query(
       collection(db, 'classes'),
       where('teacherId', '==', user.uid)
     )
 
-    return onSnapshot(classesQuery, (snapshot) => {
-      setClasses(snapshot.docs.map(doc => ({
+    const classesUnsubscribe = onSnapshot(classesQuery, (snapshot) => {
+      const classesData = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
-      })) as Class[])
-    })
-  }, [user])
+      })) as ClassData[]
+      setClasses(classesData)
 
-  const createClass = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!className.trim()) return
+      const assignmentsQuery = query(
+        collection(db, 'assignments'),
+        where('classId', 'in', classesData.map(c => c.id))
+      )
 
-    try {
-      await addDoc(collection(db, 'classes'), {
-        name: className,
-        teacherId: user?.uid,
-        studentIds: [],
-        code: Math.random().toString(36).substring(2, 8).toUpperCase(),
-        createdAt: new Date().toISOString()
+      const assignmentsUnsubscribe = onSnapshot(assignmentsQuery, (snapshot) => {
+        setAssignments(snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as Assignment[])
       })
-      setClassName('')
-    } catch (error) {
-      console.error('Error:', error)
-    }
-  }
+
+      return () => assignmentsUnsubscribe()
+    })
+
+    return () => classesUnsubscribe()
+  }, [user?.uid])
+
+  const recentAssignments = assignments
+    .sort((a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime())
+    .slice(0, 5)
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      {/* Header Section */}
-      <div className="flex justify-between items-center mb-8">
+    <div className="max-w-7xl mx-auto px-4 py-8 ml-64">
+      <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Teacher Dashboard</h1>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          New Assignment
-        </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Create Class Form */}
-        <div className="lg:col-span-1">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Create New Class</h2>
-              <form onSubmit={createClass} className="space-y-4">
-                <input
-                  type="text"
-                  value={className}
-                  onChange={(e) => setClassName(e.target.value)}
-                  placeholder="Enter class name"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button 
-                  type="submit"
-                  className="w-full bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Classes Overview */}
+        <div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-lg font-semibold">Your Classes</h2>
+            </div>
+            <div className="divide-y divide-gray-200">
+              {classes.map(cls => (
+                <Link
+                  key={cls.id}
+                  href={`/c/${cls.id}`}
+                  className="block p-6 hover:bg-gray-50"
                 >
-                  Create Class
-                </button>
-              </form>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h3 className="font-medium text-gray-900">{cls.name}</h3>
+                      <p className="text-sm text-gray-500">
+                        {cls.studentIds?.length || 0} students
+                      </p>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-gray-400" />
+                  </div>
+                </Link>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Classes Grid */}
-        <div className="lg:col-span-2">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {classes.map((cls) => (
-              <div 
-                key={cls.id} 
-                className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
+        {/* Recent Activity */}
+        <div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+              <h2 className="text-lg font-semibold">Recent Assignments</h2>
+              <Link 
+                href="/teacher/submissions"
+                className="text-sm text-blue-600 hover:text-blue-700"
               >
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">{cls.name}</h3>
-                      <p className="text-sm text-gray-500">Code: {cls.code}</p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        setSelectedClass(cls.id)
-                        setShowCreateModal(true)
-                      }}
-                      className="p-2 hover:bg-gray-50 rounded-full"
-                    >
-                      <Pencil className="h-4 w-4 text-gray-500" />
-                    </button>
-                  </div>
+                View all
+              </Link>
+            </div>
+            <div className="divide-y divide-gray-200">
+              {recentAssignments.map(assignment => {
+                const className = classes.find(c => c.id === assignment.classId)?.name
+                const submissionCount = Object.keys(assignment.submissions || {}).length
+                const totalStudents = classes.find(c => c.id === assignment.classId)?.studentIds?.length || 0
 
-                  <div className="space-y-2">
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Users className="h-4 w-4 mr-2" />
-                      <span>{cls.studentIds?.length || 0} students</span>
-                    </div>
-                  </div>
-
+                return (
                   <Link
-                    href={`/c/${cls.id}`}
-                    className="mt-4 inline-block w-full text-center px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                    key={assignment.id}
+                    href={`/teacher/submissions/${assignment.id}`}
+                    className="block p-6 hover:bg-gray-50"
                   >
-                    View Class
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="text-sm text-gray-500 mb-1">{className}</p>
+                        <h3 className="font-medium text-gray-900">{assignment.title}</h3>
+                        <div className="mt-2 flex items-center gap-4 text-sm">
+                          <span className="flex items-center gap-1 text-gray-500">
+                            <CheckCircle className="h-4 w-4" />
+                            {submissionCount} / {totalStudents} submitted
+                          </span>
+                          <span className="flex items-center gap-1 text-gray-500">
+                            <Clock className="h-4 w-4" />
+                            Due {new Date(assignment.dueDate).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-gray-400" />
+                    </div>
                   </Link>
+                )
+              })}
+
+              {recentAssignments.length === 0 && (
+                <div className="p-6 text-center text-gray-500">
+                  <p>No assignments yet</p>
                 </div>
-              </div>
-            ))}
+              )}
+            </div>
           </div>
         </div>
       </div>
-
-      {showCreateModal && selectedClass && (
-        <CreateAssignmentModal
-          classId={selectedClass}
-          onClose={() => {
-            setShowCreateModal(false)
-            setSelectedClass(null)
-          }}
-        />
-      )}
     </div>
   )
 }
