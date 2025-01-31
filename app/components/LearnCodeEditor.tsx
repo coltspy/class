@@ -1,3 +1,4 @@
+// app/components/LearnCodeEditor.tsx
 import { useState } from 'react'
 import Editor from '@monaco-editor/react'
 import { CheckCircle, XCircle, PlayCircle } from 'lucide-react'
@@ -7,15 +8,17 @@ interface TestCase {
   expectedOutput: string;
 }
 
+interface LearnCodeEditorProps {
+  initialCode?: string;
+  language?: string;
+  testCases?: TestCase[];
+}
+
 export default function LearnCodeEditor({
   initialCode = '',
   language = 'javascript',
   testCases = []
-}: {
-  initialCode?: string;
-  language?: string;
-  testCases?: TestCase[];
-}) {
+}: LearnCodeEditorProps) {
   const [code, setCode] = useState(initialCode)
   const [results, setResults] = useState<Array<{ passed: boolean; output: string }>>([])
 
@@ -34,11 +37,10 @@ export default function LearnCodeEditor({
           passed,
           output: `Input: ${test.input}\nOutput: ${result}\nExpected: ${test.expectedOutput}`
         }
-    } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      } catch (error) {
         return {
           passed: false,
-          output: `Error: ${errorMessage}`
+          output: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
         }
       }
     })
@@ -49,18 +51,21 @@ export default function LearnCodeEditor({
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
       <div className="border-b border-gray-200">
-        <div className="px-4 py-3 bg-gray-50 flex justify-between items-center">
-          <h3 className="font-medium text-gray-900">Code Editor</h3>
+        {/* Header */}
+        <div className="px-4 py-3 bg-gradient-to-r from-teal-600 to-teal-700 flex justify-between items-center">
+          <h3 className="font-medium text-white">Code Playground</h3>
           <button
             onClick={runCode}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white 
-                     rounded-lg hover:bg-teal-700 transition-colors text-sm font-medium"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 
+                     text-white rounded-lg transition-colors text-sm font-medium"
           >
             <PlayCircle className="w-4 h-4" />
             Run Code
           </button>
         </div>
-        <div className="h-[300px] border-b border-gray-200">
+
+        {/* Editor */}
+        <div className="h-[300px]">
           <Editor
             height="100%"
             defaultLanguage={language}
@@ -72,12 +77,14 @@ export default function LearnCodeEditor({
               fontSize: 14,
               lineNumbers: 'on',
               scrollBeyondLastLine: false,
-              wordWrap: 'on'
+              wordWrap: 'on',
+              padding: { top: 16, bottom: 16 }
             }}
           />
         </div>
       </div>
 
+      {/* Test Results */}
       <div className="p-4 bg-gray-50">
         <h4 className="font-medium text-gray-900 mb-4">Test Results</h4>
         <div className="space-y-3">
@@ -87,29 +94,30 @@ export default function LearnCodeEditor({
                 key={index}
                 className={`p-4 rounded-lg ${
                   result.passed 
-                    ? 'bg-green-50 border border-green-100' 
+                    ? 'bg-teal-50 border border-teal-100' 
                     : 'bg-red-50 border border-red-100'
                 }`}
               >
                 <div className="flex items-center gap-2 mb-2">
                   {result.passed ? (
-                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <CheckCircle className="w-5 h-5 text-teal-600" />
                   ) : (
                     <XCircle className="w-5 h-5 text-red-600" />
                   )}
-                  <span className="font-medium">
+                  <span className="font-medium text-gray-900">
                     Test Case {index + 1} - {result.passed ? 'Passed' : 'Failed'}
                   </span>
                 </div>
-                <pre className="text-sm font-mono text-gray-600 whitespace-pre-wrap">
+                <pre className="text-sm font-mono text-gray-600 whitespace-pre-wrap bg-white rounded-lg p-3 border border-gray-100">
                   {result.output}
                 </pre>
               </div>
             ))
           ) : (
-            <p className="text-center text-gray-500 py-4">
+            <div className="text-center py-8 text-gray-500">
+              <PlayCircle className="w-8 h-8 mx-auto mb-2 text-gray-400" />
               Click "Run Code" to test your solution
-            </p>
+            </div>
           )}
         </div>
       </div>

@@ -1,321 +1,234 @@
 'use client'
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { ArrowLeft, ChevronRight, Box, Variable, Code2, Terminal, AlertTriangle } from 'lucide-react'
+import LessonTemplate from '@/app/components/LessonTemplate'
+import { Box, Variable, Code2, AlertTriangle } from 'lucide-react'
 import LearnCodeEditor from '@/app/components/LearnCodeEditor'
-import { motion } from 'framer-motion'
-
-const fadeIn = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.5 }
-}
 
 export default function VariablesLesson() {
-  const [activeTab, setActiveTab] = useState('learn')
-  const [activeSection, setActiveSection] = useState('intro')
-
-  const tabs = [
-    { id: 'learn', label: 'Learn' },
-    { id: 'practice', label: 'Practice' }
-  ]
-
-  const sections = [
-    { id: 'intro', label: 'Introduction' },
-    { id: 'types', label: 'Data Types' },
-    { id: 'naming', label: 'Naming Rules' },
-    { id: 'practice', label: 'Practice' }
-  ]
-
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Navigation */}
-        <div className="py-6">
-          <Link href="/learn" className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900">
-            <ArrowLeft size={16} className="mr-1" />
-            Back to Lessons
-          </Link>
-        </div>
-
-        {/* Header */}
-        <div className="py-8">
-          <motion.div 
-            initial="initial"
-            animate="animate"
-            variants={fadeIn}
-            className="max-w-4xl"
-          >
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Understanding Variables</h1>
-            <p className="text-xl text-gray-600">
-              Learn how to store and manage data in your programs using variables - the building blocks of programming.
-            </p>
-          </motion.div>
-        </div>
-
-        {/* Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-12">
-          {/* Sidebar */}
-          <div className="lg:col-span-1 space-y-6">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-              <div className="p-4 border-b border-gray-200">
-                <h3 className="font-semibold text-gray-900">Quick Tips</h3>
-              </div>
-              <div className="p-4 space-y-3">
-                <div className="flex items-start gap-2 text-sm text-gray-600">
-                  <Box className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                  Use meaningful variable names
-                </div>
-                <div className="flex items-start gap-2 text-sm text-gray-600">
-                  <Variable className="h-5 w-5 text-purple-500 flex-shrink-0 mt-0.5" />
-                  JavaScript is case-sensitive
-                </div>
-                <div className="flex items-start gap-2 text-sm text-gray-600">
-                  <Terminal className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
-                  Always declare variables before using
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Main Content */}
-          <div className="lg:col-span-3">
-            {activeSection === 'intro' && (
-              <>
-                {/* Box Storage Analogy */}
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl shadow-sm border border-blue-100 p-8 mb-8">
-                  <h2 className="text-2xl font-semibold text-gray-900 mb-6">Think of Variables as Boxes</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="prose">
-                      <p className="text-gray-700">
-                        Imagine you have different boxes to store different things:
-                      </p>
-                      <ul className="space-y-2 text-gray-700">
-                        <li>A box for your name (text)</li>
-                        <li>A box for your age (number)</li>
-                        <li>A box for your shopping list (array)</li>
-                      </ul>
-                    </div>
-                    <div className="bg-white rounded-lg p-4">
-                      <code className="block text-sm font-mono text-gray-800 whitespace-pre">
-{`// Creating boxes (variables)
-let name = "Alex";
-let age = 25;
-let items = ["milk", "bread"];`}</code>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Basic Examples */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 mb-8">
-                  <h2 className="text-2xl font-semibold text-gray-900 mb-6">Creating Variables</h2>
-                  
-                  <div className="space-y-6">
-                    <div className="bg-gray-50 rounded-lg p-6">
-                      <h3 className="font-medium text-gray-900 mb-4">Using let</h3>
-                      <div className="bg-white rounded-lg p-4">
-                        <code className="block text-sm font-mono text-gray-800">
-{`let score = 0;          // Start with zero
-score = 100;           // Change it later
-score = score + 50;    // Update using current value`}</code>
-                      </div>
-                      <p className="mt-3 text-sm text-gray-600">
-                        Use let when your value might change later
-                      </p>
-                    </div>
-
-                    <div className="bg-gray-50 rounded-lg p-6">
-                      <h3 className="font-medium text-gray-900 mb-4">Using const</h3>
-                      <div className="bg-white rounded-lg p-4">
-                        <code className="block text-sm font-mono text-gray-800">
-{`const pi = 3.14159;     // Never changes
-const daysInWeek = 7;   // Always stays 7
-const name = "Alex";    // Name won't change`}</code>
-                      </div>
-                      <p className="mt-3 text-sm text-gray-600">
-                        Use const when your value should never change
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Practice Exercise */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-                  <h2 className="text-2xl font-semibold text-gray-900 mb-6">Try It: Temperature Converter</h2>
-                  <p className="text-gray-600 mb-6">
-                    Create a variable to store a temperature in Fahrenheit, then convert it to Celsius.
-                  </p>
-                  <LearnCodeEditor
-                    initialCode={`function solution(input) {
-  // Create a variable for Fahrenheit using the input
-  // Convert to Celsius: (F - 32) * 5/9
-  // Return the Celsius temperature
-}`}
-                    testCases={[
-                      { input: "32", expectedOutput: "0" },
-                      { input: "212", expectedOutput: "100" },
-                      { input: "98.6", expectedOutput: "37" }
-                    ]}
-                  />
-                </div>
-              </>
-            )}
-
-{activeSection === 'types' && (
-  <>
-    <div className="space-y-8">
-      {/* Numbers */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-        <h2 className="text-2xl font-semibold text-gray-900 mb-6">Numbers</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-gray-50 rounded-lg p-6">
-            <h3 className="font-medium text-gray-900 mb-4">Integers</h3>
-            <div className="bg-white rounded-lg p-4">
-              <code className="block text-sm font-mono text-gray-800">
-{`let age = 25;
-let temperature = -5;
-let score = 100;`}</code>
-            </div>
-            <p className="mt-3 text-sm text-gray-600">
-              Whole numbers, positive or negative
-            </p>
-          </div>
-
-          <div className="bg-gray-50 rounded-lg p-6">
-            <h3 className="font-medium text-gray-900 mb-4">Decimals</h3>
-            <div className="bg-white rounded-lg p-4">
-              <code className="block text-sm font-mono text-gray-800">
-{`let price = 19.99;
-let pi = 3.14159;
-let discount = 0.25;`}</code>
-            </div>
-            <p className="mt-3 text-sm text-gray-600">
-              Numbers with decimal points
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-6 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg p-6 border border-amber-100">
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="w-6 h-6 text-amber-600 flex-shrink-0" />
-            <div>
-              <h3 className="font-medium text-gray-900 mb-2">Watch Out!</h3>
-              <p className="text-gray-700">
-                Be careful with decimal calculations:
-              </p>
-              <div className="bg-white rounded-lg p-4 mt-2">
-                <code className="block text-sm font-mono text-gray-800">
-{`0.1 + 0.2 // Returns 0.30000000000000004
-// Use toFixed() for money:
-let total = (0.1 + 0.2).toFixed(2); // "0.30"`}</code>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Strings */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-        <h2 className="text-2xl font-semibold text-gray-900 mb-6">Strings</h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <div className="bg-gray-50 rounded-lg p-6">
-            <h3 className="font-medium text-gray-900 mb-4">Basic Strings</h3>
-            <div className="bg-white rounded-lg p-4">
-              <code className="block text-sm font-mono text-gray-800">
-{`let name = "Alex";
-let message = 'Hello!';
-let text = \`Hi \${name}\`;  // Template literal`}</code>
-            </div>
-          </div>
-
-          <div className="bg-gray-50 rounded-lg p-6">
-            <h3 className="font-medium text-gray-900 mb-4">String Operations</h3>
-            <div className="bg-white rounded-lg p-4">
-              <code className="block text-sm font-mono text-gray-800">
-{`let firstName = "Alex";
-let lastName = "Smith";
-let fullName = firstName + " " + lastName;
-// Result: "Alex Smith"`}</code>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-blue-50 rounded-lg p-6 border border-blue-100">
-          <h3 className="font-medium text-gray-900 mb-4">Cool String Features</h3>
-          <div className="bg-white rounded-lg p-4">
-            <code className="block text-sm font-mono text-gray-800">
-{`let message = "Hello World";
-
-message.length        // 11
-message.toUpperCase() // "HELLO WORLD"
-message.toLowerCase() // "hello world"
-message.split(" ")    // ["Hello", "World"]`}</code>
-          </div>
-        </div>
-      </div>
-
-      {/* Booleans */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-        <h2 className="text-2xl font-semibold text-gray-900 mb-6">Booleans</h2>
+  const lessonData = {
+    lessonTitle: "JavaScript Variables: Building Blocks of Programming",
+    introduction: {
+      title: "Understanding Variables",
+      description: "Master the fundamentals of storing and manipulating data in JavaScript using variables.",
+      goals: [
+        "Learn to declare variables using var",
+        "Store different types of data in variables",
+        "Understand variable scope",
+        "Practice real-world examples",
+        "Master naming conventions",
+        "Debug common issues"
+      ],
+      tips: [
+        "Always declare variables with var",
+        "Use descriptive names",
+        "Keep code organized and readable",
+        "Comment your code"
+      ],
+      content: (
         <div className="space-y-6">
-          <div className="bg-gray-50 rounded-lg p-6">
-            <h3 className="font-medium text-gray-900 mb-4">True or False</h3>
-            <div className="bg-white rounded-lg p-4">
-              <code className="block text-sm font-mono text-gray-800">
-{`let isLoggedIn = true;
-let hasPermission = false;
-let isAdult = age >= 18;  // true or false based on age`}</code>
-            </div>
-          </div>
+          <div className="bg-white rounded-lg p-6">
+            <h3 className="font-medium text-gray-900 mb-4">Your First Variables</h3>
+            <code className="block text-sm font-mono bg-gray-50 p-4 rounded-lg mb-4 whitespace-pre">
+{`// Player Information
+var playerName = "Mario";             // The player's name
+var score = 0;                        // Current game score
+var isGameOver = false;               // Game state tracker
 
-          <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-lg p-6 border border-emerald-100">
-            <h3 className="font-medium text-gray-900 mb-4">Common Uses</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-white rounded-lg p-4">
-                <p className="text-sm text-gray-600 mb-2">Game States:</p>
-                <code className="block text-sm font-mono text-gray-800">
-{`let isGameOver = false;
-let isPlaying = true;
-let hasWon = false;`}</code>
-              </div>
-              <div className="bg-white rounded-lg p-4">
-                <p className="text-sm text-gray-600 mb-2">Form Validation:</p>
-                <code className="block text-sm font-mono text-gray-800">
-{`let isValid = true;
-let hasError = false;
-let isComplete = true;`}</code>
-              </div>
-            </div>
+// Game Statistics
+var health = 100;                     // Current health points
+var shields = 50;                     // Shield power level
+var lives = 3;                        // Remaining lives
+
+// Weapon System
+var ammo = 100;                       // Available ammunition
+var weaponType = "laser";             // Current weapon
+var damage = 25;                      // Weapon damage`}</code>
           </div>
         </div>
-      </div>
+      )
+    },
+    sections: [
+      {
+        id: 'basics',
+        title: 'Variable Basics',
+        content: (
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-6">Creating Variables</h2>
+              
+              <div className="space-y-6">
+                <div className="bg-gradient-to-br from-teal-50 to-emerald-50 rounded-lg p-6 border border-teal-100">
+                  <h3 className="font-medium text-gray-900 mb-4">Basic Variables</h3>
+                  <code className="block text-sm font-mono bg-white p-4 rounded-lg mb-4 whitespace-pre">
+{`// Basic Declarations
+var playerScore;                      // Declare without value
+var currentLevel = 1;                 // Declare with value
+var gameName = "Super Adventure";     // String variable
+var totalCoins = 100;                // Number variable
 
-      {/* Practice Exercise */}
-      <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl shadow-sm border border-purple-100 p-8">
-        <h2 className="text-2xl font-semibold text-gray-900 mb-6">Practice: User Profile</h2>
-        <p className="text-gray-600 mb-6">
-          Create variables to store user information and combine them into a profile message.
-        </p>
-        <LearnCodeEditor
-          initialCode={`function solution(input) {
-  // input format: "Alex,25,true"
-  // Create variables for name, age, and isPremium
-  // Return format: "Name: Alex, Age: 25, Premium: Yes"
+// Player Position
+var playerX = 0;                      // X coordinate
+var playerY = 0;                      // Y coordinate
+var playerSpeed = 5;                  // Movement speed
+
+// Game Settings
+var difficulty = "normal";            // Game difficulty
+var soundEnabled = true;              // Sound settings
+var musicVolume = 0.8;                // Music volume`}</code>
+                </div>
+
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-100">
+                  <h3 className="font-medium text-gray-900 mb-4">Multiple Declarations</h3>
+                  <code className="block text-sm font-mono bg-white p-4 rounded-lg mb-4 whitespace-pre">
+{`// Single Line Declarations
+var x = 5, y = 10, z = 15;           // Position coordinates
+
+// Multi-line Declarations
+var firstName = "John",               // Player first name
+    lastName = "Doe",                 // Player last name
+    age = 25,                         // Player age
+    isActive = true;                  // Account status
+
+// Related Variables
+var enemyX = 100,                     // Enemy X position
+    enemyY = 200,                     // Enemy Y position
+    enemyHealth = 50;                 // Enemy health`}</code>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-6">Variable Types</h2>
+              
+              <div className="grid grid-cols-1 gap-6">
+                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg p-6">
+                  <h3 className="font-medium text-gray-900 mb-4">Numbers</h3>
+                  <code className="block text-sm font-mono bg-white p-4 rounded-lg mb-4 whitespace-pre">
+{`// Integer Values
+var score = 100;                      // Player score
+var lives = 3;                        // Remaining lives
+var level = 1;                        // Current level
+
+// Decimal Values
+var speed = 5.5;                      // Movement speed
+var gravity = 9.81;                   // Gravity force
+var damageMultiplier = 1.5;          // Damage multiplier
+
+// Calculated Values
+var totalPoints = 1000;               // Total points
+var bonusPoints = 50;                 // Bonus points
+var finalScore = totalPoints + bonus; // Final score`}</code>
+                </div>
+
+                <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-lg p-6">
+                  <h3 className="font-medium text-gray-900 mb-4">Text (Strings)</h3>
+                  <code className="block text-sm font-mono bg-white p-4 rounded-lg mb-4 whitespace-pre">
+{`// Player Information
+var username = "CoolPlayer123";       // Player username
+var rank = "Novice";                  // Player rank
+var title = "Dragon Slayer";          // Player title
+
+// Game Messages
+var welcomeMsg = "Welcome back!";     // Welcome message
+var gameOverMsg = "Game Over!";       // Game over text
+var victoryMsg = "You Win!";          // Victory message
+
+// Item Descriptions
+var sword = "Dragon's Bane";          // Weapon name
+var armor = "Knight's Shield";        // Armor name
+var potion = "Health Elixir";         // Item name`}</code>
+                </div>
+
+                <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg p-6">
+                  <h3 className="font-medium text-gray-900 mb-4">Booleans (True/False)</h3>
+                  <code className="block text-sm font-mono bg-white p-4 rounded-lg mb-4 whitespace-pre">
+{`// Game States
+var isGameOver = false;               // Game state
+var isPaused = false;                 // Pause state
+var isMuted = true;                   // Sound state
+
+// Player States
+var isJumping = false;                // Jump state
+var isRunning = false;                // Movement state
+var isCrouching = false;              // Crouch state
+
+// Item States
+var hasKey = false;                   // Key possession
+var hasWeapon = true;                 // Weapon check
+var hasShield = true;                 // Shield check`}</code>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-br from-rose-50 to-red-50 rounded-lg p-6">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-6 h-6 text-red-600 flex-shrink-0" />
+                <div>
+                  <h3 className="font-medium text-gray-900 mb-2">Common Mistakes</h3>
+                  <code className="block text-sm font-mono bg-white p-4 rounded-lg mb-4 whitespace-pre">
+{`// ❌ Missing var Keyword
+score = 100;                          // Wrong!
+var score = 100;                      // Correct!
+
+// ❌ Invalid Names
+var 123player = "John";               // Can't start with number
+var player-name = "John";             // No hyphens allowed
+var player name = "John";             // No spaces allowed
+
+// ❌ Wrong Types
+var score = "100";                    // String, not number
+var health = "50";                    // String, not number
+var ammo = "25";                      // String, not number`}</code>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl shadow-sm border border-purple-100 p-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-6">Practice Time!</h2>
+              <p className="text-gray-600 mb-6">Create a scoring system that adds points to a player's score.</p>
+              <LearnCodeEditor
+                initialCode={`function solution(input) {
+  // Initialize score
+  var score = 0;                      // Starting score
+  
+  // Add points to score
+  score = score + Number(input);      // Add input to score
+  
+  // Return final score
+  return score;                       // Return result
 }`}
-          testCases={[
-            { input: "Alex,25,true", expectedOutput: "Name: Alex, Age: 25, Premium: Yes" },
-            { input: "Emma,30,false", expectedOutput: "Name: Emma, Age: 30, Premium: No" }
-          ]}
-        />
-      </div>
-    </div>
-  </>
-)}
+                testCases={[
+                  { input: "10", expectedOutput: "10" },
+                  { input: "5", expectedOutput: "5" },
+                  { input: "20", expectedOutput: "20" }
+                ]}
+              />
+            </div>
           </div>
-        </div>
-      </div>
-    </div>
-  )
+        )
+      }
+    ],
+    challenges: [
+      {
+        title: "Score Calculator",
+        description: "Build a scoring system that keeps track of points",
+        initialCode: `function solution(input) {
+  // Initialize score variable
+  var score = 0;                      // Starting at zero
+  
+  // Add input to score
+  score = score + Number(input);      // Add points
+  
+  // Return final score
+  return score;                       // Return result
+}`,
+        testCases: [
+          { input: "5", expectedOutput: "5" },
+          { input: "10", expectedOutput: "10" }
+        ]
+      }
+    ]
+  }
+
+  return <LessonTemplate {...lessonData} />
 }
