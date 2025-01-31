@@ -93,11 +93,11 @@ export default function AssignmentPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-12 ml-64">
+    <div className="min-h-screen bg-gray-50 pb-12">
       {/* Success/Error Notifications */}
       {submissionState.status === 'success' && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white rounded-lg p-6 flex items-center gap-3 shadow-lg ml-32">
+          <div className="bg-white rounded-lg p-6 flex items-center gap-3 shadow-lg">
             <CheckCircle className="text-emerald-600" size={24} />
             <p className="text-lg font-medium">{submissionState.message}</p>
           </div>
@@ -106,14 +106,14 @@ export default function AssignmentPage() {
 
       {submissionState.status === 'error' && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white rounded-lg p-6 flex items-center gap-3 shadow-lg ml-32">
+          <div className="bg-white rounded-lg p-6 flex items-center gap-3 shadow-lg">
             <XCircle className="text-red-600" size={24} />
             <p className="text-lg font-medium">{submissionState.message}</p>
           </div>
         </div>
       )}
 
-      <div className="max-w-[1600px] mx-auto px-6">
+      <div className="px-8">
         {/* Navigation */}
         <div className="py-6">
           <Link 
@@ -175,14 +175,16 @@ export default function AssignmentPage() {
         </div>
 
         {/* Code Editor */}
-        <SplitCodeEditor
-          code={code}
-          onChange={setCode}
-          language={assignment.language}
-          readOnly={Boolean(isSubmitted || isPastDue)}
-          testCases={assignment.testCases}
-          onSubmit={!isSubmitted && !isPastDue ? handleSubmit : undefined}
-        />
+        <div className="max-w-[95%] mx-auto">
+          <SplitCodeEditor
+            code={code}
+            onChange={setCode}
+            language={assignment.language}
+            readOnly={Boolean(isSubmitted || isPastDue)}
+            testCases={assignment.testCases}
+            onSubmit={!isSubmitted && !isPastDue ? handleSubmit : undefined}
+          />
+        </div>
       </div>
     </div>
   )

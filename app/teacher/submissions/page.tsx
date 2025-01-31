@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { collection, query, where, onSnapshot } from 'firebase/firestore'
+import { collection, query, where, onSnapshot, getDocs } from 'firebase/firestore'
 import { db } from '@/app/lib/firebase'
 import { useAuth } from '@/app/lib/auth'
 import { Assignment, ClassData } from '@/app/lib/types'
@@ -19,32 +19,33 @@ export default function TeacherSubmissionsPage() {
 
     const classesQuery = query(
       collection(db, 'classes'),
-      where('teacherId', '==', user.uid)
+      where('teacherIds', 'array-contains', user.uid)  // Updated to teacherIds
     )
 
-    const classesUnsubscribe = onSnapshot(classesQuery, (snapshot) => {
+    const unsubscribe = onSnapshot(classesQuery, async (snapshot) => {
       const classesData = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as ClassData[]
       setClasses(classesData)
 
-      const assignmentsQuery = query(
-        collection(db, 'assignments'),
-        where('classId', 'in', classesData.map(c => c.id))
-      )
-
-      const assignmentsUnsubscribe = onSnapshot(assignmentsQuery, (snapshot) => {
-        setAssignments(snapshot.docs.map(doc => ({
+      // Fetch assignments once
+      if (classesData.length > 0) {
+        const assignmentsQuery = query(
+          collection(db, 'assignments'),
+          where('classId', 'in', classesData.map(c => c.id))
+        )
+        const assignmentsSnapshot = await getDocs(assignmentsQuery)
+        setAssignments(assignmentsSnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         })) as Assignment[])
-      })
-
-      return () => assignmentsUnsubscribe()
+      } else {
+        setAssignments([])
+      }
     })
 
-    return () => classesUnsubscribe()
+    return () => unsubscribe()
   }, [user?.uid])
 
   const groupedAssignments = classes.reduce((acc, cls) => {
@@ -53,86 +54,88 @@ export default function TeacherSubmissionsPage() {
   }, {} as Record<string, Assignment[]>)
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 ml-64">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Submissions Overview</h1>
-      </div>
+    <div className="min-h-screen bg-gray-50 pb-12">
+      <div className="px-8">
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-900">Submissions Overview</h1>
+        </div>
 
-      {/* Class Tabs */}
-      <div className="border-b border-gray-200 mb-8">
-        <div className="flex space-x-8">
-          <button
-            onClick={() => setSelectedClass('all')}
-            className={`py-4 px-1 border-b-2 font-medium text-sm ${
-              selectedClass === 'all'
-                ? 'border-teal-600 text-teal-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            All Classes
-          </button>
-          {classes.map(cls => (
+        {/* Class Tabs */}
+        <div className="border-b border-gray-200 mb-8">
+          <div className="flex space-x-8">
             <button
-              key={cls.id}
-              onClick={() => setSelectedClass(cls.id)}
+              onClick={() => setSelectedClass('all')}
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                selectedClass === cls.id
+                selectedClass === 'all'
                   ? 'border-teal-600 text-teal-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              {cls.name}
+              All Classes
             </button>
-          ))}
+            {classes.map(cls => (
+              <button
+                key={cls.id}
+                onClick={() => setSelectedClass(cls.id)}
+                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  selectedClass === cls.id
+                    ? 'border-teal-600 text-teal-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                {cls.name}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
 
-      {/* Class Sections */}
-      <div className="space-y-12">
-        {selectedClass === 'all' ? (
-          // Show all classes
-          classes.map(cls => (
-            <div key={cls.id} className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-lg font-semibold text-gray-900">{cls.name}</h2>
-                <span className="text-sm text-gray-500">
-                  {groupedAssignments[cls.id]?.length || 0} assignments
-                </span>
+        {/* Class Sections */}
+        <div className="space-y-12">
+          {selectedClass === 'all' ? (
+            // Show all classes
+            classes.map(cls => (
+              <div key={cls.id} className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-lg font-semibold text-gray-900">{cls.name}</h2>
+                  <span className="text-sm text-gray-500">
+                    {groupedAssignments[cls.id]?.length || 0} assignments
+                  </span>
+                </div>
+                
+                {/* Assignments for this class */}
+                {groupedAssignments[cls.id]?.map(assignment => (
+                  <AssignmentCard 
+                    key={assignment.id} 
+                    assignment={assignment} 
+                    className={cls.name}
+                  />
+                ))}
               </div>
-              
-              {/* Assignments for this class */}
-              {groupedAssignments[cls.id]?.map(assignment => (
+            ))
+          ) : (
+            // Show selected class
+            <div className="space-y-6">
+              {groupedAssignments[selectedClass]?.map(assignment => (
                 <AssignmentCard 
                   key={assignment.id} 
-                  assignment={assignment} 
-                  className={cls.name}
+                  assignment={assignment}
+                  className={classes.find(c => c.id === selectedClass)?.name || ''}
                 />
               ))}
             </div>
-          ))
-        ) : (
-          // Show selected class
-          <div className="space-y-6">
-            {groupedAssignments[selectedClass]?.map(assignment => (
-              <AssignmentCard 
-                key={assignment.id} 
-                assignment={assignment}
-                className={classes.find(c => c.id === selectedClass)?.name || ''}
-              />
-            ))}
-          </div>
-        )}
+          )}
 
-        {/* Empty State */}
-        {assignments.length === 0 && (
-          <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-200">
-            <FileText className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No assignments yet</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              Create assignments to see student submissions
-            </p>
-          </div>
-        )}
+          {/* Empty State */}
+          {assignments.length === 0 && (
+            <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-200">
+              <FileText className="mx-auto h-12 w-12 text-gray-400" />
+              <h3 className="mt-2 text-sm font-medium text-gray-900">No assignments yet</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                Create assignments to see student submissions
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
@@ -151,7 +154,7 @@ function AssignmentCard({
 
   return (
     <Link
-      href={`/c/${assignment.classId}/a/${assignment.id}`}
+      href={`/teacher/submissions/${assignment.id}`}  // Updated link to correct path
       className="block bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-all"
     >
       <div className="p-6">

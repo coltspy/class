@@ -2,14 +2,12 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { 
   Code2, 
   Variable, 
   GitBranch, 
   Repeat, 
   Box, 
-  ArrowRight,
   Parentheses,
   Binary,
   ChevronRight
@@ -93,27 +91,28 @@ export default function LearnPage() {
     : lessons.filter(lesson => lesson.category === selectedCategory)
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-teal-600 to-teal-700">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-8 py-8">
+        {/* Header */}
         <div className="max-w-4xl mb-8">
-          <h1 className="text-4xl font-bold text-white mb-4">
+          <h1 className="text-3xl font-bold text-gray-900 mb-3">
             Interactive Coding Lessons
           </h1>
-          <p className="text-teal-100 text-lg">
+          <p className="text-gray-600 text-lg">
             Master programming fundamentals with hands-on practice and instant feedback.
           </p>
         </div>
 
         {/* Category Pills */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-full p-1.5 inline-flex gap-2 mb-8">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-1.5 inline-flex gap-2 mb-8">
           {categories.map((category) => (
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all
                 ${selectedCategory === category 
-                  ? 'bg-white text-teal-700' 
-                  : 'text-white hover:bg-white/10'
+                  ? 'bg-teal-50 text-teal-700 ring-1 ring-teal-600/20' 
+                  : 'text-gray-600 hover:bg-gray-50'
                 }`}
             >
               {category}
@@ -126,12 +125,12 @@ export default function LearnPage() {
           {filteredLessons.map((lesson) => (
             <div
               key={lesson.id}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden
-                        transition-all duration-300 hover:shadow-md hover:-translate-y-1"
+              className="group bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden
+                        transition-all duration-300 hover:shadow-md hover:-translate-y-1 hover:border-teal-500"
             >
               <div className="p-6">
                 <div className="w-12 h-12 bg-teal-50 rounded-lg flex items-center justify-center
-                              text-teal-600 mb-4">
+                              text-teal-600 mb-4 transition-transform group-hover:scale-110">
                   {lesson.icon}
                 </div>
                 
@@ -147,11 +146,11 @@ export default function LearnPage() {
                   <Link
                     href={`/learn/${lesson.id}`}
                     className="inline-flex items-center text-sm text-teal-600 font-medium 
-                              hover:text-teal-700 group"
+                              hover:text-teal-700 group/link"
                   >
                     Start
                     <ChevronRight className="w-4 h-4 ml-1 transition-transform 
-                                          group-hover:translate-x-0.5" />
+                                          group-hover/link:translate-x-0.5" />
                   </Link>
                 </div>
               </div>

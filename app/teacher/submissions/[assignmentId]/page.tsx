@@ -1,12 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import { db } from '@/app/lib/firebase'
-import { doc, getDoc, collection, getDocs, query, where } from 'firebase/firestore'
+import { doc, getDoc } from 'firebase/firestore'
 import { Assignment, ClassData } from '@/app/lib/types'
 import Link from 'next/link'
-import { ArrowLeft, Clock, Users, Code } from 'lucide-react'
+import { ArrowLeft, Clock, Users, Code, X, ExternalLink } from 'lucide-react'
 import SplitCodeEditor from '@/app/components/SplitCodeEditor'
 
 interface UserData {
@@ -68,10 +68,12 @@ export default function AssignmentSubmissionsPage() {
 
   const submissionCount = submissions.length
   const isPastDue = new Date(assignment.dueDate) < new Date()
+  const currentSubmission = selectedSubmission ? 
+    submissions.find(s => s.studentId === selectedSubmission) : null
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-12 ml-64">
-      <div className="max-w-7xl mx-auto px-6 py-8">
+    <div className="min-h-screen bg-gray-50 pb-12">
+      <div className="px-8">
         {/* Navigation */}
         <div className="mb-8">
           <Link 
@@ -108,64 +110,73 @@ export default function AssignmentSubmissionsPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-5 gap-8">
-          {/* Submissions List */}
-          <div className="col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 h-fit">
-            <div className="p-4 border-b border-gray-200">
-              <h2 className="font-medium text-gray-900">Submissions</h2>
-            </div>
-            <div className="divide-y divide-gray-200">
-              {submissions.map((submission) => (
-                <button
-                  key={submission.studentId}
-                  onClick={() => setSelectedSubmission(submission.studentId)}
-                  className={`w-full text-left p-4 hover:bg-gray-50 ${
-                    selectedSubmission === submission.studentId ? 'bg-teal-50 border-l-4 border-l-teal-600' : ''
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-gray-900">{submission.studentName}</p>
-                      <p className="text-sm text-gray-500">{submission.studentEmail}</p>
-                      <p className="text-xs text-gray-400 mt-1">
-                        Submitted {new Date(submission.submittedAt).toLocaleString()}
-                      </p>
-                    </div>
-                    <Code size={16} className="text-gray-400" />
-                  </div>
-                </button>
-              ))}
-
-              {submissionCount === 0 && (
-                <div className="p-4 text-center text-gray-500">
-                  No submissions yet
+        {/* Submissions Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {submissions.map((submission) => (
+            <button
+              key={submission.studentId}
+              onClick={() => setSelectedSubmission(submission.studentId)}
+              className="w-full bg-white rounded-xl shadow-sm border border-gray-200 p-4 
+                       hover:border-teal-500 hover:shadow-md transition-all text-left"
+            >
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Code className="h-5 w-5 text-teal-600" />
+                  <p className="font-medium text-gray-900">{submission.studentName}</p>
                 </div>
-              )}
-            </div>
-          </div>
+                <p className="text-sm text-gray-500">{submission.studentEmail}</p>
+                <p className="text-xs text-gray-400 mt-2">
+                  Submitted {new Date(submission.submittedAt).toLocaleString()}
+                </p>
+                <div className="mt-3 text-sm text-teal-600 font-medium">
+                  View Submission →
+                </div>
+              </div>
+            </button>
+          ))}
 
-          {/* Code View */}
-          <div className="col-span-3">
-            {selectedSubmission ? (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <SplitCodeEditor
-                  code={assignment.submissions[selectedSubmission].code}
-                  onChange={() => {}}
-                  language={assignment.language}
-                  readOnly={true}
-                  testCases={assignment.testCases}
-                />
-              </div>
-            ) : (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center text-gray-500">
-                <Code size={24} className="mx-auto mb-4 text-gray-400" />
-                <p className="font-medium text-gray-900">Select a submission</p>
-                <p className="text-sm mt-1">Click on a submission to view the code</p>
-              </div>
-            )}
-          </div>
+          {submissionCount === 0 && (
+            <div className="col-span-full text-center py-12 bg-white rounded-xl shadow-sm border border-gray-200">
+              <Code className="mx-auto h-12 w-12 text-gray-400" />
+              <p className="mt-2 font-medium text-gray-900">No submissions yet</p>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Code View Modal */}
+      {selectedSubmission && currentSubmission && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl w-[90vw] h-[90vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+              <div>
+                <h2 className="font-medium text-gray-900">{currentSubmission.studentName}'s Submission</h2>
+                <p className="text-sm text-gray-500">
+                  Submitted {new Date(currentSubmission.submittedAt).toLocaleString()}
+                </p>
+              </div>
+              <button 
+                onClick={() => setSelectedSubmission(null)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X size={20} className="text-gray-500" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="flex-1 p-6 overflow-hidden">
+              <SplitCodeEditor
+                code={assignment.submissions[selectedSubmission].code}
+                onChange={() => {}}
+                language={assignment.language}
+                readOnly={true}
+                testCases={assignment.testCases}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

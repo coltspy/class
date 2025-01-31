@@ -4,54 +4,58 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { db } from '@/app/lib/firebase'
-import { collection, query, where, onSnapshot } from 'firebase/firestore'
+import { collection, query, where, onSnapshot, doc, getDoc } from 'firebase/firestore'
 import { useAuth } from '@/app/lib/auth'
 import { 
   Layout, 
   BookOpen, 
   Layers,
   GraduationCap,
-  Code2,
-  Users,
   Book
 } from 'lucide-react'
+import { ClassData } from '@/app/lib/types'
 
 export default function Sidebar() {
   const { user } = useAuth()
-  const [classes, setClasses] = useState<any[]>([])
+  const [classes, setClasses] = useState<ClassData[]>([])
   const pathname = usePathname()
 
   useEffect(() => {
     if (!user?.uid) return
 
-    const classesQuery = query(
-      collection(db, 'classes'),
-      where(user.role === 'teacher' ? 'teacherId' : 'studentIds', 
-        user.role === 'teacher' ? '==' : 'array-contains', 
-        user.uid
-      )
-    )
+    // Query classes based on user role
+    const classesQuery = user.role === 'teacher'
+      ? query(
+          collection(db, 'classes'),
+          where('teacherIds', 'array-contains', user.uid)
+        )
+      : query(
+          collection(db, 'classes'),
+          where('studentIds', 'array-contains', user.uid)
+        );
 
-    return onSnapshot(classesQuery, (snapshot) => {
+    const unsubscribe = onSnapshot(classesQuery, (snapshot) => {
       setClasses(snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
-      })))
+      })) as ClassData[])
     })
-  }, [user])
+
+    return () => unsubscribe()
+  }, [user?.uid, user?.role])
 
   const isActive = (path: string) => {
-    if (path === '/dashboard' || path === '/teacher') {
-      return pathname === path
-    }
     return pathname?.startsWith(path)
   }
 
+  if (!user) return null
+
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 fixed h-screen overflow-y-auto">
+    <div className="h-full flex flex-col border-r border-gray-200">
+      {/* Header */}
       <div className="p-6 border-b border-gray-200">
         <Link 
-          href={user?.role === 'teacher' ? '/teacher' : '/dashboard'} 
+          href={user.role === 'teacher' ? '/teacher' : '/dashboard'} 
           className="text-xl font-semibold text-gray-900 flex items-center gap-2"
         >
           <Layers className="h-6 w-6 text-teal-600" />
@@ -59,10 +63,11 @@ export default function Sidebar() {
         </Link>
       </div>
 
-      <nav className="p-4 space-y-1">
+      {/* Scrollable navigation area */}
+      <nav className="flex-1 overflow-y-auto p-4 space-y-4">
         {/* Main Navigation */}
-        <div className="pb-4">
-          {user?.role === 'teacher' && (
+        <div className="space-y-1">
+          {user.role === 'teacher' ? (
             <Link 
               href="/teacher" 
               className={`flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg transition-colors
@@ -74,19 +79,19 @@ export default function Sidebar() {
               <Layout className="h-5 w-5" />
               <span>Teaching</span>
             </Link>
+          ) : (
+            <Link 
+              href="/dashboard" 
+              className={`flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg transition-colors
+                ${isActive('/dashboard')
+                  ? 'bg-teal-50 text-teal-700' 
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                }`}
+            >
+              <BookOpen className="h-5 w-5" />
+              <span>Dashboard</span>
+            </Link>
           )}
-          
-          <Link 
-            href="/dashboard" 
-            className={`flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg transition-colors
-              ${isActive('/dashboard')
-                ? 'bg-teal-50 text-teal-700' 
-                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-              }`}
-          >
-            <BookOpen className="h-5 w-5" />
-            <span>Classes</span>
-          </Link>
 
           <Link 
             href="/learn" 
@@ -130,6 +135,6 @@ export default function Sidebar() {
           </div>
         </div>
       </nav>
-    </aside>
+    </div>
   )
 }
