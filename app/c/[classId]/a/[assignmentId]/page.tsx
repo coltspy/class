@@ -173,7 +173,6 @@ export default function AssignmentPage() {
             </div>
           </div>
         </div>
-
         {/* Code Editor */}
         <div className="max-w-[95%] mx-auto">
           <SplitCodeEditor
